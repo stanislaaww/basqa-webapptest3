@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BASQA - PRE-ORDER</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            background-image: url('YOUR_GIF_URL_HERE');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            font-size: 72px;
+            font-weight: 700;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            letter-spacing: 3px;
+            font-weight: 300;
+            margin-bottom: 60px;
+            opacity: 0.8;
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        .cta-button {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 18px 50px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeIn 2s ease-in;
+        }
+
+        .cta-button:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .products {
+            min-height: 100vh;
+            padding: 80px 20px;
+            background: #000;
+        }
+
+        .products-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        .product-card {
+            background: #fff;
+            color: #000;
+            padding: 0;
+            transition: transform 0.3s ease;
+            opacity: 0;
+            animation: slideUp 0.6s ease forwards;
+            cursor: pointer;
+        }
+
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+        .product-card:nth-child(4) { animation-delay: 0.4s; }
+        .product-card:nth-child(5) { animation-delay: 0.5s; }
+        .product-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 350px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #ddd;
+        }
+
+        .product-info {
+            padding: 25px;
+        }
+
+        .product-name {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .select-size {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .select-size:hover {
+            background: #333;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #fff;
+            color: #000;
+            max-width: 1100px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            padding: 40px;
+            position: relative;
+            transform: translateY(30px);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #000;
+            z-index: 10;
+        }
+
+        .modal-left {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 500px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            position: relative;
+        }
+
+        .image-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: background 0.3s;
+        }
+
+        .image-nav:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .image-nav.prev { left: 10px; }
+        .image-nav.next { right: 10px; }
+
+        .thumbnail-gallery {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            background: #f5f5f5;
+            flex-shrink: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+            transition: border 0.3s;
+        }
+
+        .thumbnail:hover {
+            border-color: #000;
+        }
+
+        .thumbnail.active {
+            border-color: #000;
+        }
+
+        .modal-right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .modal-price {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .size-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .size-selector label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .size-selector select {
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quantity-btn {
+            width: 35px;
+            height: 35px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .quantity-value {
+            font-size: 18px;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .buy-button {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 18px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .buy-button:hover {
+            background: #333;
+        }
+
+        .product-description {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .description-section {
+            margin-bottom: 20px;
+        }
+
+        .description-section h4 {
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .description-section p {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 48px;
+                letter-spacing: 6px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .modal-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 30px 20px;
+            }
+
+            .main-image {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1 class="logo">BASQA</h1>
+        <p class="subtitle">PRE-ORDER BASQA CLUB</p>
+        <button class="cta-button" onclick="scrollToProducts()">ПЕРЕЙТИ К АССОРТИМЕНТУ</button>
+    </section>
+
+    <section class="products" id="products">
+        <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            
+            <div class="modal-left">
+                <div class="main-image" id="mainImage">
+                    <button class="image-nav prev" onclick="changeImage(-1)">‹</button>
+                    <span id="mainImageContent">🧥</span>
+                    <button class="image-nav next" onclick="changeImage(1)">›</button>
+                </div>
+                <div class="thumbnail-gallery" id="thumbnailGallery"></div>
+            </div>
+
+            <div class="modal-right">
+                <h2 class="modal-title" id="modalTitle">HOODIE BLACK "FC"</h2>
+                <p class="modal-price" id="modalPrice">32 000 ₸</p>
+
+                <div class="size-selector">
+                    <label>Размер</label>
+                    <select id="sizeSelect">
+                        <option>S</option>
+                        <option>M</option>
+                        <option selected>L</option>
+                        <option>XL</option>
+                        <option>2XL</option>
+                    </select>
+                </div>
+
+                <div class="quantity-control">
+                    <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+                    <span class="quantity-value" id="quantity">1</span>
+                    <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                </div>
+
+                <button class="buy-button">КУПИТЬ</button>
+
+                <div class="product-description" id="modalDescription">
+                    <div class="highlight">
+                        Дроп доступен по предзаказу! Отправки стартуют с 18.11.25.
+                    </div>
+
+                    <div class="description-section">
+                        <h4>О товаре</h4>
+                        <p>Премиальное худи из плотного хлопка с фирменной вышивкой BASQA FC. Идеально для городского стиля и активного образа жизни.</p>
+                    </div>
+
+                    <div class="description-section">
+                        <h4>Характеристики</h4>
+                        <p>• Плотность: 450 г/м²</p>
+                        <p>• Состав: 80% хлопок, 20% полиэстер</p>
+                        <p>• Крой: Оверсайз</p>
+                        <p>• Производство: Турция</p>
+                    </div>
+
+                    <div class="description-section">
+                        <h4>Размерная сетка</h4>
+                        <p>S: Грудь 110см, Длина 68см</p>
+                        <p>M: Грудь 116см, Длина 70см</p>
+                        <p>L: Грудь 122см, Длина 72см</p>
+                        <p>XL: Грудь 128см, Длина 74см</p>
+                        <p>2XL: Грудь 134см, Длина 76см</p>
+                    </div>
+
+                    <div class="description-section">
+                        <p><strong>Бонус:</strong> Тауарды сатып алған жағдайда бонус ретінде стикерлар беріледі.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            {
+                name: 'HOODIE BLACK "FC"',
+                price: '32 000 ₸',
+                icon: '🧥',
+                description: 'Премиальное худи из плотного хлопка с фирменной вышивкой BASQA FC. Идеально для городского стиля и активного образа жизни.'
+            },
+            {
+                name: 'T-SHIRT WHITE "LOGO"',
+                price: '18 000 ₸',
+                icon: '👕',
+                description: 'Классическая футболка с минималистичным логотипом BASQA. Изготовлена из премиального хлопка высокого качества.'
+            },
+            {
+                name: 'CAP BLACK "SIGNATURE"',
+                price: '12 000 ₸',
+                icon: '🧢',
+                description: 'Стильная кепка с вышитым логотипом BASQA. Регулируемый размер и премиальные материалы.'
+            },
+            {
+                name: 'PANTS CARGO BLACK',
+                price: '38 000 ₸',
+                icon: '👖',
+                description: 'Карго штаны в стиле streetwear с множеством карманов. Прочная ткань и современный крой.'
+            },
+            {
+                name: 'JACKET OVERSIZED',
+                price: '45 000 ₸',
+                icon: '🧥',
+                description: 'Оверсайз куртка для дерзкого городского образа. Водоотталкивающая ткань и утепленная подкладка.'
+            },
+            {
+                name: 'SNEAKERS COLLAB',
+                price: '52 000 ₸',
+                icon: '👟',
+                description: 'Лимитированная коллаборация BASQA x Sneaker Brand. Эксклюзивный дизайн и премиальные материалы.'
+            }
+        ];
+
+        let currentProduct = null;
+        let currentImageIndex = 0;
+        let currentQuantity = 1;
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map((product, index) => `
+                <div class="product-card" onclick="openModal(${index})">
+                    <div class="product-image">${product.icon}</div>
+                    <div class="product-info">
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-price">${product.price}</p>
+                        <button class="select-size" onclick="event.stopPropagation(); openModal(${index})">ВЫБРАТЬ РАЗМЕР</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(index) {
+            currentProduct = products[index];
+            currentImageIndex = 0;
+            currentQuantity = 1;
+            
+            document.getElementById('modalTitle').textContent = currentProduct.name;
+            document.getElementById('modalPrice').textContent = currentProduct.price;
+            document.getElementById('mainImageContent').textContent = currentProduct.icon;
+            document.getElementById('quantity').textContent = currentQuantity;
+            
+            const thumbnailGallery = document.getElementById('thumbnailGallery');
+            thumbnailGallery.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const thumb = document.createElement('div');
+                thumb.className = `thumbnail ${i === 0 ? 'active' : ''}`;
+                thumb.textContent = currentProduct.icon;
+                thumb.onclick = () => selectImage(i);
+                thumbnailGallery.appendChild(thumb);
+            }
+            
+            document.getElementById('modalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function changeImage(direction) {
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            currentImageIndex = (currentImageIndex + direction + thumbnails.length) % thumbnails.length;
+            selectImage(currentImageIndex);
+        }
+
+        function selectImage(index) {
+            currentImageIndex = index;
+            document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === index);
+            });
+        }
+
+        function changeQuantity(delta) {
+            currentQuantity = Math.max(1, currentQuantity + delta);
+            document.getElementById('quantity').textContent = currentQuantity;
+        }
+
+        function scrollToProducts() {
+            document.getElementById('products').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        renderProducts();
+    </script>
+</body>
+</html>
