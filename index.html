@@ -14,10 +14,6 @@ TOKEN = "8323334700:AAFnB-6COcv2Kb67mRhx9K8tOSxytF9PnlQ"
 WEBAPP_URL = "https://basqa-webapptest3.vercel.app/"
 BRAND_SITE_URL = "https://basqa.kz/cart"
 
-# Константы для поддержки
-SUPPORT_PHONE = "77051234567"  # Замените на реальный номер WhatsApp
-SUPPORT_MESSAGE = "Здравствуйте! У меня вопрос по боту BASQA"
-
 def init_db():
     conn = sqlite3.connect('basqa_bot.db')
     cursor = conn.cursor()
@@ -41,6 +37,7 @@ def add_to_cart(user_id, product_id, product_name, price, size, quantity=1):
     cursor.execute("SELECT quantity FROM cart WHERE user_id = ? AND product_id = ? AND size = ?",
                    (user_id, product_id, size))
     result = cursor.fetchone()
+    
     if result:
         new_quantity = result[0] + quantity
         cursor.execute("UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ? AND size = ?",
@@ -48,6 +45,7 @@ def add_to_cart(user_id, product_id, product_name, price, size, quantity=1):
     else:
         cursor.execute("INSERT INTO cart (user_id, product_id, product_name, price, size, quantity) VALUES (?, ?, ?, ?, ?, ?)",
                        (user_id, product_id, product_name, price, size, quantity))
+    
     conn.commit()
     conn.close()
 
@@ -92,10 +90,11 @@ def get_main_menu():
         [
             InlineKeyboardButton("🅱️ О бренде", callback_data="about"),
             InlineKeyboardButton("👁️‍🗨️ Basqa Room", callback_data="basqa_room")
-        ],
-        [InlineKeyboardButton("💬 Поддержка", callback_data="support")]
+        ]
     ]
+
     return InlineKeyboardMarkup(keyboard)
+
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -118,12 +117,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             text="Главное меню BASQA:",
             reply_markup=get_main_menu()
         )
-    elif query.data == "user_panel":
-        await show_user_panel(update, context)
-    elif query.data == "basqa_room":
-        await show_basqa_room(update, context)
-    elif query.data == "support":
-        await show_support(update, context)
 
 async def show_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -142,6 +135,7 @@ async def show_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     total = sum(item["price"] * item["quantity"] for item in cart_items)
     cart_text = "🛒 *Ваша корзина:*\n\n"
+    
     for item in cart_items:
         cart_text += f"• *{item['product_name']}*\n"
         cart_text += f"  Размер: {item['size']}\n"
@@ -154,7 +148,7 @@ async def show_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = []
     for item in cart_items:
         keyboard.append([InlineKeyboardButton(
-            f"❌ Удалить {item['product_name']} ({item['size']})",
+            f"❌ Удалить {item['product_name']} ({item['size']})", 
             callback_data=f"remove_{item['product_id']}_{item['size']}"
         )])
     
@@ -181,10 +175,10 @@ async def checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     
     total = sum(item["price"] * item["quantity"] for item in cart_items)
+    
     order_text = "📋 *Детали заказа:*\n\n"
     for item in cart_items:
         order_text += f"• {item['product_name']} ({item['size']}) x{item['quantity']}\n"
-    
     order_text += f"\n💰 *Итого: {total:,.0f} ₸*\n\n"
     order_text += "Для завершения оформления заказа перейдите на сайт BASQA:"
     
@@ -214,7 +208,9 @@ async def show_about(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         "сочетая локальную идентичность с глобальными трендами.\n\n"
         "Подробнее о нас можно узнать на Qazmonitor и в социальных сетях BASQA."
     )
+    
     keyboard = [[InlineKeyboardButton("◀️ Назад", callback_data="main_menu")]]
+    
     await query.edit_message_text(
         text=about_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -234,20 +230,20 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         # Добавляем товары из веб-приложения
         for item in cart_data:
             add_to_cart(
-                user_id,
-                item["product_id"],
-                item["name"],
-                item["price"],
+                user_id, 
+                item["product_id"], 
+                item["name"], 
+                item["price"], 
                 item["size"],
                 item["quantity"]
             )
         
         total = sum(item["price"] * item["quantity"] for item in cart_data)
+        
         order_text = "✅ *Заказ получен!*\n\n"
         order_text += "📋 Состав заказа:\n\n"
         for item in cart_data:
             order_text += f"• {item['name']} ({item['size']}) x{item['quantity']}\n"
-        
         order_text += f"\n💰 *Итого: {total:,.0f} ₸*\n\n"
         order_text += "Для завершения оформления перейдите на сайт:"
         
@@ -268,96 +264,6 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
-
-# ========== НОВЫЙ ФУНКЦИОНАЛ ==========
-
-async def show_user_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Показывает панель пользователя с его данными"""
-    query = update.callback_query
-    user = query.from_user
-    
-    user_info_text = (
-        "👤 *Панель пользователя*\n\n"
-        f"🆔 ID: `{user.id}`\n"
-        f"👤 Имя: {user.first_name}"
-    )
-    
-    # Добавляем фамилию если есть
-    if user.last_name:
-        user_info_text += f" {user.last_name}"
-    
-    user_info_text += "\n"
-    
-    # Добавляем username если есть
-    if user.username:
-        user_info_text += f"📱 Username: @{user.username}\n"
-    else:
-        user_info_text += f"📱 Username: не установлен\n"
-    
-    keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")]]
-    
-    await query.edit_message_text(
-        text=user_info_text,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown"
-    )
-
-async def show_basqa_room(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Показывает информацию о Basqa Room"""
-    query = update.callback_query
-    
-    basqa_room_text = (
-        "👁️‍🗨️ *BASQA ROOM*\n\n"
-        "Закрытая зона бренда BASQA — эксклюзивное пространство для истинных ценителей.\n\n"
-        "🔥 Что внутри:\n"
-        "• Ранний доступ к новым коллекциям\n"
-        "• Эксклюзивные дропы и лимитированные релизы\n"
-        "• Специальные цены для участников\n"
-        "• Закрытые мероприятия и коллаборации\n"
-        "• Персональные предложения\n\n"
-        "💎 BASQA ROOM — это не просто магазин, это комьюнити единомышленников, "
-        "которые разделяют ценности бренда и стиль жизни Another Vision."
-    )
-    
-    keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")]]
-    
-    await query.edit_message_text(
-        text=basqa_room_text,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown"
-    )
-
-async def show_support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Показывает информацию о поддержке"""
-    query = update.callback_query
-    
-    support_text = (
-        "💬 *Поддержка BASQA*\n\n"
-        "Наша команда всегда готова помочь вам!\n\n"
-        "📞 Свяжитесь с нами через WhatsApp для:\n"
-        "• Консультации по товарам\n"
-        "• Помощи с заказом\n"
-        "• Вопросов о доставке\n"
-        "• Любых других вопросов\n\n"
-        "⏰ Время работы: Пн-Вс, 10:00 - 22:00\n\n"
-        "Мы ответим вам в ближайшее время!"
-    )
-    
-    # Формируем WhatsApp ссылку с предзаполненным сообщением
-    whatsapp_url = f"https://wa.me/{SUPPORT_PHONE}?text={urllib.parse.quote(SUPPORT_MESSAGE)}"
-    
-    keyboard = [
-        [InlineKeyboardButton("💬 Написать в WhatsApp", url=whatsapp_url)],
-        [InlineKeyboardButton("◀️ Назад в меню", callback_data="main_menu")]
-    ]
-    
-    await query.edit_message_text(
-        text=support_text,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown"
-    )
-
-# ========== КОНЕЦ НОВОГО ФУНКЦИОНАЛА ==========
 
 def main() -> None:
     init_db()
