@@ -83,18 +83,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def get_main_menu():
     keyboard = [
         [InlineKeyboardButton("👕 Просмотреть каталог", web_app=WebAppInfo(url=WEBAPP_URL))],
-        [
-            InlineKeyboardButton("🛒 Моя корзина", callback_data="cart"),
-            InlineKeyboardButton("👤 Панель пользователя", callback_data="user_panel")
-        ],
-        [
-            InlineKeyboardButton("🅱️ О бренде", callback_data="about"),
-            InlineKeyboardButton("👁️‍🗨️ Basqa Room", callback_data="basqa_room")
-        ]
+        [InlineKeyboardButton("🛒 Моя корзина", callback_data="cart")],
+        [InlineKeyboardButton("🅱️ О бренде", callback_data="about")]
     ]
-
     return InlineKeyboardMarkup(keyboard)
-
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
